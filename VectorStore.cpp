@@ -557,6 +557,8 @@ void VectorStore::forEach(void (*action)(SinglyLinkedList<float>&, int, string&)
         action(*(rec->vector), rec->id, rec->rawText);
     }
 }
+
+// Phần hiện thức phương thức tính khoảng cách.
 double VectorStore::cosineSimilarity(const SinglyLinkedList<float>& v1,
                                      const SinglyLinkedList<float>& v2) const {
     if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
