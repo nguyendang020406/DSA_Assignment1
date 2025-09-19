@@ -43,7 +43,7 @@ ArrayList<T>::~ArrayList() {
 // EnsureCapacity
 template <class T>
 void ArrayList<T>::ensureCapacity(int cap) {
-    if (cap <= this->capacity) return; // đủ rồi thì thoát
+    if (cap <= this->capacity) return;
 
     // Tăng capacity lên ít nhất cap (theo hệ số 1.5)
     int newCapacity = this->capacity;
@@ -475,7 +475,7 @@ void VectorStore::clear(){
     }
     records.clear();
     count =0;
-}
+}  
 
 SinglyLinkedList<float>* VectorStore::preprocessing(string rawText) {
     if (!embeddingFunction) return nullptr;
