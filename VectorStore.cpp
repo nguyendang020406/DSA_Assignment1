@@ -22,14 +22,16 @@ ArrayList<T>::ArrayList(const ArrayList<T>& other) {
 template <class T>
 ArrayList<T>& ArrayList<T>::operator=(const ArrayList<T>& other) {
     if (this != &other) {
-        ArrayList<T> temp(other); // gọi copy constructor
-        // hoán đổi dữ liệu
-        std::swap(this->data, temp.data);
-        std::swap(this->capacity, temp.capacity);
-        std::swap(this->count, temp.count);
+        ensureCapacity(other.count); // đảm bảo đủ chỗ
+
+        this->count = other.count;
+        for (int i = 0; i < count; i++) {
+            this->data[i] = other.data[i]; // copy từng phần tử
+        }
     }
     return *this;
 }
+
 
 // Destructor
 template <class T>
@@ -372,7 +374,19 @@ int SinglyLinkedList<T>::indexOf(T item) const {
     }
     return -1;
 }
+template <class T>
+void SinglyLinkedList<T>::set(int index, const T& e) {
+    if (index < 0 || index >= count) {
+        throw std::out_of_range("Index is invalid!");
+    }
 
+    Node* curr = head;
+    for (int i = 0; i < index; i++) {
+        curr = curr->next;
+    }
+
+    curr->data = e;
+}
 template <class T>
 bool SinglyLinkedList<T>::contains(T item) const {
     return indexOf(item) != -1;
