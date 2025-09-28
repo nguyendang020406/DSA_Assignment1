@@ -40,9 +40,9 @@ public:
     bool contains(T item) const;
     string toString(string (*item2str)(T&) = 0) const;
 
-    Iterator begin() const { return Iterator(const_cast<ArrayList<T>*>(this), 0); }
-    Iterator end() const   { return Iterator(const_cast<ArrayList<T>*>(this), count); }
-
+    Iterator begin();
+    Iterator end();
+    
     // Inner class Iterator
     class Iterator {
         #ifdef TESTING

@@ -151,6 +151,16 @@ bool ArrayList<T>::contains (T item) const{
 }
 
 
+template <class T>
+typename ArrayList<T>::Iterator ArrayList<T>::begin() {
+    return Iterator(this, 0);
+}
+
+template <class T>
+typename ArrayList<T>::Iterator ArrayList<T>::end() {
+    return Iterator(this, count);
+}
+// đã check
 
 
 // ----------------- Iterator of ArrayList Implementation -----------------
@@ -222,9 +232,7 @@ ArrayList<T>::Iterator::operator--(int) {
     --(*this);  // gọi lại phiên bản tiền tố
     return temp;
 }
-
-
-
+// đã check
 // ----------------- SinglyLinkedList Implementation -----------------
 template <class T>
 SinglyLinkedList<T>::SinglyLinkedList() {
