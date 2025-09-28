@@ -689,10 +689,10 @@ void quickSort(ArrayList<Entry>& arr, int left, int right, bool maximize) {
 }
 
 int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const string& metric) const {
-    if (k <= 0 || count == 0) {
+    if (k <= 0 || count == 0 || k >count) {
         throw invalid_k_value();
     }
-    if (k > count) k = count;
+    // if (k > count) k = count;
 
     ArrayList<Entry> results;  // thay vì std::vector
 
@@ -701,14 +701,12 @@ int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const
         VectorRecord* rec = records.get(i);
         double score;
         if (metric == "cosine") score = cosineSimilarity(query, *(rec->vector));
-        else if (metric == "l1") score = l1Distance(query, *(rec->vector));
-        else if (metric == "l2") score = l2Distance(query, *(rec->vector));
+        else if (metric == "manhattan") score = l1Distance(query, *(rec->vector));
+        else if (metric == "euclidean") score = l2Distance(query, *(rec->vector));
         else throw invalid_metric();
 
         results.add({rec->id, score});   // dùng ArrayList::add
     }
-
-    // QuickSort theo metric
     bool maximize = (metric == "cosine");
     quickSort(results, 0, results.size() - 1, maximize);
 
