@@ -41,5 +41,11 @@
         "streambuf": "cpp",
         "typeinfo": "cpp"
     },
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+
+    // thêm phần này
+    "code-runner.runInTerminal": true,
+    "code-runner.executorMap": {
+        "cpp": "g++ -std=c++17 -o main main.cpp VectorStore.cpp && ./main"
+    }
 }
