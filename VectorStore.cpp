@@ -366,6 +366,8 @@ template <class T>
 bool SinglyLinkedList<T>::contains(T item) const {
     return indexOf(item) != -1;
 }
+
+
 // ArrayList
 template <class T>
 std::string ArrayList<T>::toString(std::string (*item2str)(T&)) const {
@@ -445,6 +447,7 @@ SinglyLinkedList<T>::Iterator::operator++(int) {
     ++(*this);  
     return temp;
 }
+
 template <class T>
 typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::begin() const{
     return Iterator(head);
@@ -490,6 +493,7 @@ void VectorStore::clear(){
     records.clear();
     count =0;
 }  
+// đã check
 
 SinglyLinkedList<float>* VectorStore::preprocessing(string rawText) {
     if (!embeddingFunction) return nullptr;
@@ -506,18 +510,21 @@ SinglyLinkedList<float>* VectorStore::preprocessing(string rawText) {
 
     return vec;
 }
+
 void VectorStore::addText(string rawText) {
     SinglyLinkedList<float>* vec = preprocessing(rawText);
     VectorRecord* rec = new VectorRecord(count + 1, rawText, vec);
     records.add(rec);
     count++;
 }
+
 SinglyLinkedList<float>& VectorStore::getVector(int index) {
     if (index < 0 || index >= count) {
         throw std::out_of_range("Index is invalid!");
     }
     return *(records.get(index)->vector);
 }
+// đã check
 
 string VectorStore::getRawText(int index) const {
     if (index < 0 || index >= count) {
@@ -525,6 +532,7 @@ string VectorStore::getRawText(int index) const {
     }
     return records.get(index)->rawText;
 }
+// đã check
 
 int VectorStore::getId(int index) const {
     if (index < 0 || index >= count) {
@@ -532,6 +540,7 @@ int VectorStore::getId(int index) const {
     }
     return records.get(index)->id;
 }
+// đã check
 
 bool VectorStore::removeAt(int index) {
     if (index < 0 || index >= count) {
@@ -545,6 +554,8 @@ bool VectorStore::removeAt(int index) {
 
     return true;
 }
+
+
 bool VectorStore::updateText(int index, string newRawText) {
     if (index < 0 || index >= count) {
         throw std::out_of_range("Index is invalid!");
@@ -563,19 +574,21 @@ bool VectorStore::updateText(int index, string newRawText) {
 void VectorStore::setEmbeddingFunction(EmbedFn newEmbeddingFunction) {
     this->embeddingFunction = newEmbeddingFunction;
 } // Phương thức này dễ
-
+// đã check
 
 void VectorStore::forEach(void (*action)(SinglyLinkedList<float>&, int, string&)) {
     for (int i = 0; i < count; i++) {
         VectorRecord* rec = records.get(i);
-        action(*(rec->vector), rec->id, rec->rawText);
+        action(*(rec->vector), rec->rawLength, rec->rawText);
     }
 }
+// đã check 
+
 
 // Phần hiện thức phương thức tính khoảng cách.
 double VectorStore::cosineSimilarity(const SinglyLinkedList<float>& v1,
                                      const SinglyLinkedList<float>& v2) const {
-    if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
+    // if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
 
     auto it1 = v1.begin();
     auto it2 = v2.begin();
@@ -595,7 +608,7 @@ double VectorStore::cosineSimilarity(const SinglyLinkedList<float>& v1,
 
 double VectorStore::l1Distance(const SinglyLinkedList<float>& v1,
                                const SinglyLinkedList<float>& v2) const {
-    if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
+    // if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
 
     auto it1 = v1.begin();
     auto it2 = v2.begin();
@@ -608,7 +621,7 @@ double VectorStore::l1Distance(const SinglyLinkedList<float>& v1,
 }
 double VectorStore::l2Distance(const SinglyLinkedList<float>& v1,
                                const SinglyLinkedList<float>& v2) const {
-    if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
+    // if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
 
     auto it1 = v1.begin();
     auto it2 = v2.begin();
@@ -658,35 +671,45 @@ int VectorStore::findNearest(const SinglyLinkedList<float>& query, const string&
     return bestId;
 }
 
+
+
+
 void quickSort(ArrayList<Entry>& arr, int left, int right, bool maximize) {
     if (left >= right) return;
 
-    double pivot = arr.get((left + right) / 2).score;
-    int i = left, j = right;
+    Entry pivot = arr.get((left + right) / 2);
 
-    while (i <= j) {
-        if (maximize) {
-            // cosine similarity: càng lớn càng tốt
-            while (arr.get(i).score > pivot) i++;
-            while (arr.get(j).score < pivot) j--;
+    ArrayList<Entry> less;
+    ArrayList<Entry> equal;
+    ArrayList<Entry> greater;
+
+    for (int i = left; i <= right; i++) {
+        Entry cur = arr.get(i);
+
+        if (fabs(cur.score - pivot.score) < 1e-9) {
+            // cùng score -> giữ nguyên theo thứ tự duyệt (ổn định)
+            equal.add(cur);
+        } else if (maximize ? (cur.score > pivot.score) : (cur.score < pivot.score)) {
+            less.add(cur);
         } else {
-            // distance: càng nhỏ càng tốt
-            while (arr.get(i).score < pivot) i++;
-            while (arr.get(j).score > pivot) j--;
-        }
-
-        if (i <= j) {
-            Entry tmp = arr.get(i);
-            arr.set(i, arr.get(j));
-            arr.set(j, tmp);
-            i++;
-            j--;
+            greater.add(cur);
         }
     }
 
-    if (left < j) quickSort(arr, left, j, maximize);
-    if (i < right) quickSort(arr, i, right, maximize);
+    // Ghi kết quả trở lại arr (theo thứ tự less - equal - greater)
+    int idx = left;
+    for (int i = 0; i < less.size(); i++) arr.set(idx++, less.get(i));
+    for (int i = 0; i < equal.size(); i++) arr.set(idx++, equal.get(i));
+    for (int i = 0; i < greater.size(); i++) arr.set(idx++, greater.get(i));
+
+    // Đệ quy
+    int lsize = less.size();
+    int gsize = greater.size();
+
+    if (lsize > 1) quickSort(arr, left, left + lsize - 1, maximize);
+    if (gsize > 1) quickSort(arr, right - gsize + 1, right, maximize);
 }
+
 
 int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const string& metric) const {
     if (k <= 0 || count == 0 || k >count) {
@@ -705,7 +728,7 @@ int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const
         else if (metric == "euclidean") score = l2Distance(query, *(rec->vector));
         else throw invalid_metric();
 
-        results.add({rec->id, score});   // dùng ArrayList::add
+        results.add({i, score});   // dùng ArrayList::add
     }
     bool maximize = (metric == "cosine");
     quickSort(results, 0, results.size() - 1, maximize);
