@@ -586,11 +586,12 @@ void VectorStore::setEmbeddingFunction(EmbedFn newEmbeddingFunction) {
 void VectorStore::forEach(void (*action)(SinglyLinkedList<float>&, int, string&)) {
     for (int i = 0; i < count; i++) {
         VectorRecord* rec = records.get(i);
-        action(*(rec->vector), rec->rawLength, rec->rawText);
+        if (rec->vector) {  // chỉ xử lý nếu vector tồn tại
+            action(*(rec->vector), rec->rawLength, rec->rawText);
+        }
     }
 }
-// đã check 
-
+// đã check
 
 // Phần hiện thức phương thức tính khoảng cách.
 double VectorStore::cosineSimilarity(const SinglyLinkedList<float>& v1,

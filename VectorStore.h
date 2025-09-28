@@ -42,7 +42,9 @@ public:
 
     Iterator begin();
     Iterator end();
-    
+    // int getCapacity() const {
+    //     return this->capacity;
+    // }
     // Inner class Iterator
     class Iterator {
         #ifdef TESTING
