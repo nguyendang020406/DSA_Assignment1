@@ -34,14 +34,14 @@ public:
     bool empty() const;
     int size() const;
     void clear();
-    T& get(int index);
+    const T& get(int index) const;
     void set(int index, T e);
     int indexOf(T item) const;
     bool contains(T item) const;
     string toString(string (*item2str)(T&) = 0) const;
 
-    Iterator begin(){ return Iterator(this,0)};
-    Iterator end(){return Iterator(this, count)};
+    Iterator begin() const { return Iterator(const_cast<ArrayList<T>*>(this), 0); }
+    Iterator end() const   { return Iterator(const_cast<ArrayList<T>*>(this), count); }
 
     // Inner class Iterator
     class Iterator {
@@ -99,13 +99,13 @@ public:
     bool empty() const;
     int size() const;
     void clear();
-    T& get(int index);
+    const T& get(int index) const ; 
     int indexOf(T item) const;
     bool contains(T item) const;
     string toString(string (*item2str)(T&) = 0) const;
 
-    Iterator begin();
-    Iterator end();
+    Iterator begin() const;
+    Iterator end() const;
 
     // Inner class Iterator
     class Iterator {

@@ -4,7 +4,7 @@
 
 //Constructor
 template <class T>
-ArrayList<T>::ArrayList(int initCapacity = 10) {
+ArrayList<T>::ArrayList(int initCapacity) {
     this->capacity = initCapacity;
     this->count = 0;       
     this->data = new T[capacity];
@@ -125,7 +125,7 @@ void ArrayList<T>::clear() {
     data = new T[capacity];     // cấp phát lại mảng mới
 }
 template <class T>
-T& ArrayList<T>::get(int index) {
+const T& ArrayList<T>::get(int index) const {
     if (index < 0 || index >= count) {
         throw std::out_of_range("Index is invalid!");
     }
@@ -148,20 +148,6 @@ int ArrayList<T>::indexOf (T item) const {
 template <class T>
 bool ArrayList<T>::contains (T item) const{
     return indexOf(item) != -1;
-}
-template <class T>
-std::string ArrayList<T>::toString(std::string (*item2str)(T&) ) const{
-    std::ostringstream oss;
-    oss << "[";
-
-    for (int i = 0; i < count; i++) {
-        if (item2str) oss << item2str(data[i]); 
-        else oss << data[i];
-
-        if (i < count - 1) oss << ", ";
-    }
-    oss << "]";
-    return oss.str();
 }
 
 
@@ -308,30 +294,32 @@ template <class T>
 bool SinglyLinkedList<T>::removeItem(T item) {
     if (!head) return false;
 
+    // Trường hợp đặc biệt: item ở head
     if (head->data == item) {
-        Node* temp = head;
+        Node* tmp = head;
         head = head->next;
-        if (!head) tail = nullptr;
-        delete temp;
+        if (tmp == tail) tail = nullptr;
+        delete tmp;
         count--;
         return true;
     }
 
     Node* prev = head;
-    while (prev->next && prev->next->data != item) {
+    while (prev->next && !(prev->next->data == item)) {  // dùng == thay vì !=
         prev = prev->next;
     }
 
     if (prev->next) {
-        Node* temp = prev->next;
-        prev->next = temp->next;
-        if (temp == tail) tail = prev;
-        delete temp;
+        Node* tmp = prev->next;
+        prev->next = tmp->next;
+        if (tmp == tail) tail = prev;
+        delete tmp;
         count--;
         return true;
     }
     return false;
 }
+
 template <class T>
 bool SinglyLinkedList<T>::empty() const {
     return count == 0;
@@ -354,7 +342,7 @@ void SinglyLinkedList<T>::clear() {
 }
 
 template <class T>
-T& SinglyLinkedList<T>::get(int index) {
+const  T& SinglyLinkedList<T>::get(int index) const {
     if (index < 0 || index >= count) {
         throw std::out_of_range("Index is invalid!");
     }
@@ -375,33 +363,44 @@ int SinglyLinkedList<T>::indexOf(T item) const {
     return -1;
 }
 template <class T>
-void SinglyLinkedList<T>::set(int index, const T& e) {
-    if (index < 0 || index >= count) {
-        throw std::out_of_range("Index is invalid!");
-    }
-
-    Node* curr = head;
-    for (int i = 0; i < index; i++) {
-        curr = curr->next;
-    }
-
-    curr->data = e;
-}
-template <class T>
 bool SinglyLinkedList<T>::contains(T item) const {
     return indexOf(item) != -1;
 }
+// ArrayList
 template <class T>
-std::string SinglyLinkedList<T>::toString(std::string (*item2str)(T&) ) const {
+std::string ArrayList<T>::toString(std::string (*item2str)(T&)) const {
     std::ostringstream oss;
-    Node* cur = head;
+    oss << "[";
+    for (int i = 0; i < count; i++) {
+        if (item2str) {
+            oss << item2str(data[i]); 
+        } else {
+            // fallback chỉ hoạt động cho kiểu "có operator<<"
+            oss << data[i];
+        }
+        if (i < count - 1) oss << ", ";
+    }
+    oss << "]";
+    return oss.str();
+}
+
+// SinglyLinkedList
+template <class T>
+std::string SinglyLinkedList<T>::toString(std::string (*item2str)(T&)) const {
+    std::ostringstream oss;
+    Node* cur = head;   
     while (cur) {
-        oss << "[" << (item2str ? item2str(cur->data) : std::to_string(cur->data)) << "]";
+        if (item2str) {
+            oss << "[" << item2str(cur->data) << "]";
+        } else {
+            oss << "[" << cur->data << "]";
+        }
         if (cur->next) oss << "->";
         cur = cur->next;
     }
     return oss.str();
 }
+
 
 
 
@@ -443,16 +442,16 @@ template <class T>
 typename SinglyLinkedList<T>::Iterator 
 SinglyLinkedList<T>::Iterator::operator++(int) {
     Iterator temp = *this;
-    ++(*this);
+    ++(*this);  
     return temp;
 }
 template <class T>
-typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::begin() {
+typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::begin() const{
     return Iterator(head);
 }
 
 template <class T>
-typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::end() {
+typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::end() const{
     return Iterator(nullptr);
 }
 
@@ -461,13 +460,14 @@ typename SinglyLinkedList<T>::Iterator SinglyLinkedList<T>::end() {
 // ----------------- VectorStore Implementation -----------------
 
 //  constructor cho Vector Record
-VectorRecord(int id, const string& rawText, SinglyLinkedList<float>* vector){ 
+VectorStore::VectorRecord::VectorRecord(int id, const string& rawText, SinglyLinkedList<float>* vector) {
     this->id = id;
     this->rawText = rawText;
     this->rawLength = (int)rawText.size();
     this->vector = vector;
-};
-VectorStore::VectorStore(int dimension = 512, EmbedFn embeddingFunction = nullptr) {
+}
+
+VectorStore::VectorStore(int dimension , EmbedFn embeddingFunction) {
     this -> dimension = dimension;
     this -> embeddingFunction = embeddingFunction;
     this -> count =0;
@@ -658,25 +658,27 @@ int VectorStore::findNearest(const SinglyLinkedList<float>& query, const string&
     return bestId;
 }
 
-void quickSort(vector<Entry>& arr, int left, int right, bool maximize) {
+void quickSort(ArrayList<Entry>& arr, int left, int right, bool maximize) {
     if (left >= right) return;
 
-    double pivot = arr[(left + right) / 2].score;
+    double pivot = arr.get((left + right) / 2).score;
     int i = left, j = right;
 
     while (i <= j) {
         if (maximize) {
             // cosine similarity: càng lớn càng tốt
-            while (arr[i].score > pivot) i++;
-            while (arr[j].score < pivot) j--;
+            while (arr.get(i).score > pivot) i++;
+            while (arr.get(j).score < pivot) j--;
         } else {
             // distance: càng nhỏ càng tốt
-            while (arr[i].score < pivot) i++;
-            while (arr[j].score > pivot) j--;
+            while (arr.get(i).score < pivot) i++;
+            while (arr.get(j).score > pivot) j--;
         }
 
         if (i <= j) {
-            swap(arr[i], arr[j]);
+            Entry tmp = arr.get(i);
+            arr.set(i, arr.get(j));
+            arr.set(j, tmp);
             i++;
             j--;
         }
@@ -686,14 +688,13 @@ void quickSort(vector<Entry>& arr, int left, int right, bool maximize) {
     if (i < right) quickSort(arr, i, right, maximize);
 }
 
-int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const string& metric) const { // đã check
-    if (k <= 0 || count == 0){
+int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const string& metric) const {
+    if (k <= 0 || count == 0) {
         throw invalid_k_value();
     }
     if (k > count) k = count;
 
-    vector<Entry> results;
-
+    ArrayList<Entry> results;  // thay vì std::vector
 
     // Tính toàn bộ score
     for (int i = 0; i < count; i++) {
@@ -704,7 +705,7 @@ int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const
         else if (metric == "l2") score = l2Distance(query, *(rec->vector));
         else throw invalid_metric();
 
-        results.push_back({rec->id, score});
+        results.add({rec->id, score});   // dùng ArrayList::add
     }
 
     // QuickSort theo metric
@@ -714,7 +715,7 @@ int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const
     // Lấy top-k
     int* topIds = new int[k];
     for (int i = 0; i < k; i++) {
-        topIds[i] = results[i].id;
+        topIds[i] = results.get(i).id;   // dùng ArrayList::get
     }
     return topIds;
 }
