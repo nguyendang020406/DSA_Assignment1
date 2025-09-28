@@ -621,7 +621,7 @@ double VectorStore::l2Distance(const SinglyLinkedList<float>& v1,
     return sqrt(sumSq);
 }
 int VectorStore::findNearest(const SinglyLinkedList<float>& query, const string& metric) const {
-    if (count == 0) return -1;
+
 
     double bestScore;
     int bestId = -1;
@@ -639,20 +639,20 @@ int VectorStore::findNearest(const SinglyLinkedList<float>& query, const string&
                 bestScore = score;
                 bestId = rec->id;
             }
-        } else if (metric == "l1") {
+        } else if (metric == "manhattan") {
             score = l1Distance(query, *(rec->vector));
             if (score < bestScore) {
                 bestScore = score;
                 bestId = rec->id;
             }
-        } else if (metric == "l2") {
+        } else if (metric == "euclidean") {
             score = l2Distance(query, *(rec->vector));
             if (score < bestScore) {
                 bestScore = score;
                 bestId = rec->id;
             }
         } else {
-            throw std::invalid_argument("Unknown metric: " + metric);
+            throw invalid_metric();
         }
     }
     return bestId;
