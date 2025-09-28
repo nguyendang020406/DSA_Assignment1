@@ -164,7 +164,7 @@ ArrayList<T>::Iterator::Iterator(ArrayList<T>* pList, int index) {
 }
 
 template <class T>
-typename ArrayList<T>::Iterator& 
+typename ArrayList<T>::Iterator&    
 ArrayList<T>::Iterator::operator=(const Iterator& other) {
     if (this != &other) {
         this->pList = other.pList;
@@ -199,23 +199,27 @@ ArrayList<T>::Iterator::operator++(int) {
     ++(*this);  // gọi operator++()
     return temp;
 }
+// Tiền tố --
 template <class T>
 typename ArrayList<T>::Iterator& 
 ArrayList<T>::Iterator::operator--() {
-    if (!pList) {
-        throw std::out_of_range("Invalid iterator!");
-    }
     if (cursor == 0) {
         throw std::out_of_range("Iterator cannot move before begin!");
     }
-    --cursor;
+    if (cursor == pList->count) {
+        cursor = pList->count - 1;
+    } else {
+        --cursor;
+    }
     return *this;
 }
+
+// Hậu tố --
 template <class T>
 typename ArrayList<T>::Iterator 
 ArrayList<T>::Iterator::operator--(int) {
     Iterator temp = *this;
-    --(*this);  // gọi operator--()
+    --(*this);  // gọi lại phiên bản tiền tố
     return temp;
 }
 
@@ -367,19 +371,17 @@ bool SinglyLinkedList<T>::contains(T item) const {
     return indexOf(item) != -1;
 }
 
-
 // ArrayList
 template <class T>
 std::string ArrayList<T>::toString(std::string (*item2str)(T&)) const {
+    if (count == 0) return "[]";   // rỗng -> "[]"
+
     std::ostringstream oss;
     oss << "[";
     for (int i = 0; i < count; i++) {
-        if (item2str) {
-            oss << item2str(data[i]); 
-        } else {
-            // fallback chỉ hoạt động cho kiểu "có operator<<"
-            oss << data[i];
-        }
+        if (item2str) oss << item2str(data[i]);
+        else oss << data[i];   // fallback: có operator<<
+
         if (i < count - 1) oss << ", ";
     }
     oss << "]";
@@ -389,22 +391,19 @@ std::string ArrayList<T>::toString(std::string (*item2str)(T&)) const {
 // SinglyLinkedList
 template <class T>
 std::string SinglyLinkedList<T>::toString(std::string (*item2str)(T&)) const {
+    if (head == nullptr) return "";   // rỗng -> chuỗi rỗng ""
+
     std::ostringstream oss;
-    Node* cur = head;   
+    Node* cur = head;
     while (cur) {
-        if (item2str) {
-            oss << "[" << item2str(cur->data) << "]";
-        } else {
-            oss << "[" << cur->data << "]";
-        }
+        if (item2str) oss << "[" << item2str(cur->data) << "]";
+        else oss << "[" << cur->data << "]";
+
         if (cur->next) oss << "->";
         cur = cur->next;
     }
     return oss.str();
 }
-
-
-
 
 // ----------------- Iterator of SinglyLinkedList Implementation -----------------
 template <class T>
