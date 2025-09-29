@@ -306,7 +306,7 @@ template <class T>
 bool SinglyLinkedList<T>::removeItem(T item) {
     if (!head) return false;
 
-    // Trường hợp đặc biệt: item ở head
+   
     if (head->data == item) {
         Node* tmp = head;
         head = head->next;
@@ -317,7 +317,7 @@ bool SinglyLinkedList<T>::removeItem(T item) {
     }
 
     Node* prev = head;
-    while (prev->next && !(prev->next->data == item)) {  // dùng == thay vì !=
+    while (prev->next && !(prev->next->data == item)) {  
         prev = prev->next;
     }
 
@@ -382,14 +382,13 @@ bool SinglyLinkedList<T>::contains(T item) const {
 // ArrayList
 template <class T>
 std::string ArrayList<T>::toString(std::string (*item2str)(T&)) const {
-    if (count == 0) return "[]";   // rỗng -> "[]"
+    if (count == 0) return "[]";  
 
     std::ostringstream oss;
     oss << "[";
     for (int i = 0; i < count; i++) {
         if (item2str) oss << item2str(data[i]);
-        else oss << data[i];   // fallback: có operator<<
-
+        else oss << data[i];   
         if (i < count - 1) oss << ", ";
     }
     oss << "]";
@@ -399,7 +398,7 @@ std::string ArrayList<T>::toString(std::string (*item2str)(T&)) const {
 // SinglyLinkedList
 template <class T>
 std::string SinglyLinkedList<T>::toString(std::string (*item2str)(T&)) const {
-    if (head == nullptr) return "";   // rỗng -> chuỗi rỗng ""
+    if (head == nullptr) return "";   
 
     std::ostringstream oss;
     Node* cur = head;
@@ -554,8 +553,8 @@ bool VectorStore::removeAt(int index) {
         throw std::out_of_range("Index is invalid!");
     }
     VectorRecord* rec = records.get(index);
-    delete rec->vector; // giải phóng vector
-    delete rec;         // giải phóng record
+    delete rec->vector; 
+    delete rec;         
     records.removeAt(index);
     count--;
 
@@ -704,7 +703,6 @@ void quickSort(ArrayList<Entry>& arr, int left, int right, bool maximize) {
         }
     }
 
-    // Ghi kết quả trở lại arr (theo thứ tự less - equal - greater)
     int idx = left;
     for (int i = 0; i < less.size(); i++) arr.set(idx++, less.get(i));
     for (int i = 0; i < equal.size(); i++) arr.set(idx++, equal.get(i));
@@ -725,7 +723,7 @@ int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const
     }
     // if (k > count) k = count;
 
-    ArrayList<Entry> results;  // thay vì std::vector
+    ArrayList<Entry> results; 
 
     // Tính toàn bộ score
     for (int i = 0; i < count; i++) {
@@ -736,7 +734,7 @@ int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const
         else if (metric == "euclidean") score = l2Distance(query, *(rec->vector));
         else throw invalid_metric();
 
-        results.add({i, score});   // dùng ArrayList::add
+        results.add({i, score});   
     }
     bool maximize = (metric == "cosine");
     quickSort(results, 0, results.size() - 1, maximize);
@@ -744,7 +742,7 @@ int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const
     // Lấy top-k
     int* topIds = new int[k];
     for (int i = 0; i < k; i++) {
-        topIds[i] = results.get(i).id;   // dùng ArrayList::get
+        topIds[i] = results.get(i).id;  
     }
     return topIds;
 }
