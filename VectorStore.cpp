@@ -119,10 +119,10 @@ bool ArrayList<T>::empty() const{
 }
 template <class T>
 void ArrayList<T>::clear() {
-    delete[] data;              // giải phóng mảng cũ
-    capacity = 10;              // reset capacity mặc định
+    delete[] data;              
+    capacity = 10;              
     count = 0;
-    data = new T[capacity];     // cấp phát lại mảng mới
+    data = new T[capacity];     
 }
 template <class T>
 const T& ArrayList<T>::get(int index) const {
@@ -479,7 +479,8 @@ VectorStore::VectorRecord::VectorRecord(int id, const string& rawText, SinglyLin
 VectorStore::VectorStore(int dimension , EmbedFn embeddingFunction) {
     this -> dimension = dimension;
     this -> embeddingFunction = embeddingFunction;
-    this -> count =0;
+    this -> count = 0;
+    this -> nextId = 1;
 }
 
 VectorStore::~VectorStore() {
@@ -516,10 +517,20 @@ SinglyLinkedList<float>* VectorStore::preprocessing(string rawText) {
 
     return vec;
 }
-
 void VectorStore::addText(string rawText) {
     SinglyLinkedList<float>* vec = preprocessing(rawText);
-    VectorRecord* rec = new VectorRecord(count + 1, rawText, vec);
+
+    // Tìm id lớn nhất hiện có
+    int maxId = 0;
+    for (int i = 0; i < count; i++) {
+        int curId = records.get(i)->id;
+        if (curId > maxId) maxId = curId;
+    }
+
+    // id mới = id lớn nhất + 1
+    int newId = maxId + 1;
+
+    VectorRecord* rec = new VectorRecord(newId, rawText, vec);
     records.add(rec);
     count++;
 }
@@ -641,10 +652,8 @@ double VectorStore::l2Distance(const SinglyLinkedList<float>& v1,
     return sqrt(sumSq);
 }
 int VectorStore::findNearest(const SinglyLinkedList<float>& query, const string& metric) const {
-
-
     double bestScore;
-    int bestId = -1;
+    int bestIndex = -1;
 
     if (metric == "cosine") bestScore = -1e9;
     else bestScore = 1e18;
@@ -657,26 +666,27 @@ int VectorStore::findNearest(const SinglyLinkedList<float>& query, const string&
             score = cosineSimilarity(query, *(rec->vector));
             if (score > bestScore) {
                 bestScore = score;
-                bestId = rec->id;
+                bestIndex = i;   // dùng index thay vì rec->id
             }
         } else if (metric == "manhattan") {
             score = l1Distance(query, *(rec->vector));
             if (score < bestScore) {
                 bestScore = score;
-                bestId = rec->id;
+                bestIndex = i;
             }
         } else if (metric == "euclidean") {
             score = l2Distance(query, *(rec->vector));
             if (score < bestScore) {
                 bestScore = score;
-                bestId = rec->id;
+                bestIndex = i;
             }
         } else {
             throw invalid_metric();
         }
     }
-    return bestId;
+    return bestIndex;
 }
+
 
 
 

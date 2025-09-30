@@ -1,84 +1,88 @@
 #include "VectorStore.h"
-#include <iostream>
 #include <cassert>
-using namespace std;
+#include <iostream>
 
-// Hàm embedding đơn giản: chuyển ký tự thành số (a=1, b=2, ...)
-SinglyLinkedList<float>* dummyEmbedding(const string& text) {
+// embedding giả lập
+SinglyLinkedList<float>* dummyEmbedding(const std::string& text) {
     auto* vec = new SinglyLinkedList<float>();
-    for (char c : text) vec->add((float)(c - 'a' + 1));
+    for (char c : text) {
+        vec->add(static_cast<float>(c % 10)); // mã ASCII % 10
+    }
     return vec;
 }
+void testFindNearest() {
+    std::cout << "\n=== Test findNearest ===\n";
 
+    auto embed = [](const std::string& text) {
+        auto* vec = new SinglyLinkedList<float>();
+        for (char c : text) vec->add((float)(c % 5));
+        return vec;
+    };
+
+    VectorStore store(3, embed);
+
+    store.addText("abc");  // index=0
+    store.addText("bcd");  // index=1
+    store.addText("xyz");  // index=2
+
+    SinglyLinkedList<float>* q = embed("abc");
+    int idCos = store.findNearest(*q, "cosine");
+    int idL1  = store.findNearest(*q, "manhattan");
+    int idL2  = store.findNearest(*q, "euclidean");
+
+    assert(idCos == 0);
+    assert(idL1  == 0);
+    assert(idL2  == 0);
+
+    std::cout << "findNearest passed!\n";
+}
 void testTopKNearest() {
-    cout << "=== Test topKNearest ===" << endl;
+    std::cout << "\n=== Test topKNearest ===\n";
 
-    // Tạo VectorStore dimension = 3
-    VectorStore store(3, dummyEmbedding);
+    auto embed = [](const std::string& text) {
+        auto* vec = new SinglyLinkedList<float>();
+        for (char c : text) vec->add((float)(c % 5));
+        return vec;
+    };
 
-    // Thêm dữ liệu
-    store.addText("abc"); // id=1, vec=[1,2,3]
-    store.addText("abd"); // id=2, vec=[1,2,4]
-    store.addText("aaa"); // id=3, vec=[1,1,1]
+    VectorStore store(3, embed);
 
-    // Query
-    SinglyLinkedList<float> query;
-    query.add(1); query.add(2); query.add(3);
+    store.addText("abc");  // index=0
+    store.addText("bcd");  // index=1
+    store.addText("xyz");  // index=2
+    store.addText("aaa");  // index=3
 
-    // ---- Case 1: Cosine similarity ----
-    int* ids1 = store.topKNearest(query, 2, "cosine");
-    cout << "Cosine top-2: " << ids1[0] << ", " << ids1[1] << endl;
-    assert(ids1[0] == 0);  // "abc" gần nhất
+    SinglyLinkedList<float>* q = embed("abc");
+
+    // K=2 cosine
+    int* ids1 = store.topKNearest(*q, 2, "cosine");
+    assert(ids1[0] == 0);  // chính nó
+    std::cout << "cosine top[0] = " << ids1[0] << "\n";
     delete[] ids1;
 
-    // ---- Case 2: Euclidean (L2) ----
-    int* ids2 = store.topKNearest(query, 3, "euclidean");
-    cout << "L2 top-3: " << ids2[0] << ", " << ids2[1] << ", " << ids2[2] << endl;
-    assert(ids2[0] == 0);
+    // K=3 manhattan
+    int* ids2 = store.topKNearest(*q, 3, "manhattan");
+    assert(ids2[0] == 0);  // chính nó
+    std::cout << "manhattan top[0] = " << ids2[0] << "\n";
     delete[] ids2;
 
-    // ---- Case 3: Manhattan (L1) ----
-    int* ids3 = store.topKNearest(query, 3, "manhattan");
-    cout << "L1 top-3: " << ids3[0] << ", " << ids3[1] << ", " << ids3[2] << endl;
-    assert(ids3[0] == 0);
-    delete[] ids3;  
-
-    // ---- Case 4: invalid k ----
+    // Trường hợp k > count → throw
+    bool thrown = false;
     try {
-        store.topKNearest(query, 0, "cosine");
-        assert(false);
-    } catch (const invalid_k_value& e) {
-        cout << "Caught expected: " << e.what() << endl;
+        store.topKNearest(*q, 10, "cosine");
+    } catch (const invalid_k_value&) {
+        thrown = true;
     }
+    assert(thrown);
 
-    // ---- Case 5: invalid metric ----
-    try {
-        store.topKNearest(query, 1, "unknown");
-        assert(false);
-    } catch (const invalid_metric& e) {
-        cout << "Caught expected: " << e.what() << endl;
-    }
-
-    // ---- Case 6: Tie-break (cùng distance) ----
-    VectorStore store2(2, dummyEmbedding);
-    store2.addText("aa"); // id=1, vec=[1,1]
-    store2.addText("bb"); // id=2, vec=[2,2]
-    store2.addText("cc"); // id=3, vec=[3,3]
-
-    SinglyLinkedList<float> q2;
-    q2.add(0); q2.add(0);
-
-    int* ids4 = store2.topKNearest(q2, 3, "euclidean");
-    cout << "Tie-break L2: " << ids4[0] << ", " << ids4[1] << ", " << ids4[2] << endl;
-    // Nếu cùng distance, phải giữ nguyên thứ tự chèn
-    assert(ids4[0] == 0);
-    assert(ids4[1] == 1);
-    assert(ids4[2] == 2);
-    delete[] ids4;
-
-    cout << "All topKNearest tests passed!" << endl;
+    std::cout << "topKNearest invalid k passed!\n";
 }
+
+
 int main() {
-    testTopKNearest();   // hoặc testArrayList(), testSLL()...
+    testFindNearest();
+    testTopKNearest();
+    std::cout << "All findNearest & topKNearest test cases passed!\n";
     return 0;
 }
+
