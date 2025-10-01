@@ -62,6 +62,11 @@ public:
         Iterator operator++(int);
         Iterator& operator--();
         Iterator operator--(int);
+        // Trong class ArrayList<T>::Iterator
+        Iterator(const Iterator& other) {
+            this->cursor = other.cursor;
+            this->pList = other.pList;
+        }
     };
 };
 
@@ -123,6 +128,9 @@ public:
         bool operator!=(const Iterator& other) const;
         Iterator& operator++();
         Iterator operator++(int);
+        Iterator(const Iterator& other) {
+            this->current = other.current;
+        }
     };
 };
 
@@ -161,7 +169,7 @@ public:
     int  size() const;
     bool empty() const;
     void clear();    
-
+    
     SinglyLinkedList<float>* preprocessing(string rawText);
 
     void addText(string rawText);

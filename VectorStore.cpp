@@ -1,5 +1,4 @@
 #include "VectorStore.h"
-
 // ----------------- ArrayList Implementation -----------------
 
 //Constructor
@@ -233,6 +232,25 @@ ArrayList<T>::Iterator::operator--(int) {
     return temp;
 }
 // đã check
+// ArrayList
+template <class T>
+std::string ArrayList<T>::toString(std::string (*item2str)(T&)) const {
+    if (count == 0) return "[]";  
+
+    std::ostringstream oss;
+    oss << "[";
+    for (int i = 0; i < count; i++) {
+        if (item2str) oss << item2str(data[i]);
+        else oss << data[i];   
+        if (i < count - 1) oss << ", ";
+    }
+    oss << "]";
+    return oss.str();
+}
+
+
+
+
 // ----------------- SinglyLinkedList Implementation -----------------
 template <class T>
 SinglyLinkedList<T>::SinglyLinkedList() {
@@ -378,23 +396,6 @@ template <class T>
 bool SinglyLinkedList<T>::contains(T item) const {
     return indexOf(item) != -1;
 }
-
-// ArrayList
-template <class T>
-std::string ArrayList<T>::toString(std::string (*item2str)(T&)) const {
-    if (count == 0) return "[]";  
-
-    std::ostringstream oss;
-    oss << "[";
-    for (int i = 0; i < count; i++) {
-        if (item2str) oss << item2str(data[i]);
-        else oss << data[i];   
-        if (i < count - 1) oss << ", ";
-    }
-    oss << "]";
-    return oss.str();
-}
-
 // SinglyLinkedList
 template <class T>
 std::string SinglyLinkedList<T>::toString(std::string (*item2str)(T&)) const {
@@ -480,7 +481,6 @@ VectorStore::VectorStore(int dimension , EmbedFn embeddingFunction) {
     this -> dimension = dimension;
     this -> embeddingFunction = embeddingFunction;
     this -> count = 0;
-    this -> nextId = 1;
 }
 
 VectorStore::~VectorStore() {
@@ -606,8 +606,6 @@ void VectorStore::forEach(void (*action)(SinglyLinkedList<float>&, int, string&)
 // Phần hiện thức phương thức tính khoảng cách.
 double VectorStore::cosineSimilarity(const SinglyLinkedList<float>& v1,
                                      const SinglyLinkedList<float>& v2) const {
-    // if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
-
     auto it1 = v1.begin();
     auto it2 = v2.begin();
 
@@ -626,8 +624,6 @@ double VectorStore::cosineSimilarity(const SinglyLinkedList<float>& v1,
 
 double VectorStore::l1Distance(const SinglyLinkedList<float>& v1,
                                const SinglyLinkedList<float>& v2) const {
-    // if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
-
     auto it1 = v1.begin();
     auto it2 = v2.begin();
 
@@ -639,8 +635,6 @@ double VectorStore::l1Distance(const SinglyLinkedList<float>& v1,
 }
 double VectorStore::l2Distance(const SinglyLinkedList<float>& v1,
                                const SinglyLinkedList<float>& v2) const {
-    // if (v1.size() != v2.size()) throw std::invalid_argument("Dimension mismatch");
-
     auto it1 = v1.begin();
     auto it2 = v2.begin();
 
@@ -666,7 +660,7 @@ int VectorStore::findNearest(const SinglyLinkedList<float>& query, const string&
             score = cosineSimilarity(query, *(rec->vector));
             if (score > bestScore) {
                 bestScore = score;
-                bestIndex = i;   // dùng index thay vì rec->id
+                bestIndex = i;   
             }
         } else if (metric == "manhattan") {
             score = l1Distance(query, *(rec->vector));
@@ -728,10 +722,9 @@ void quickSort(ArrayList<Entry>& arr, int left, int right, bool maximize) {
 
 
 int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const string& metric) const {
-    if (k <= 0 || count == 0 || k >count) {
+    if (k <= 0 || count == 0 || k > count) {
         throw invalid_k_value();
     }
-    // if (k > count) k = count;
 
     ArrayList<Entry> results; 
 
@@ -750,16 +743,12 @@ int* VectorStore::topKNearest(const SinglyLinkedList<float>& query, int k, const
     quickSort(results, 0, results.size() - 1, maximize);
 
     // Lấy top-k
-    int* topIds = new int[k];
+    int* topIndex = new int[k];
     for (int i = 0; i < k; i++) {
-        topIds[i] = results.get(i).id;  
+        topIndex[i] = results.get(i).id;  
     }
-    return topIds;
+    return topIndex;
 }
-
-
-
-
 
 
 
