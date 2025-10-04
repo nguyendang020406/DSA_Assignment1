@@ -9,8 +9,8 @@
 
 template <class T>
 class ArrayList {
-    #ifdef TESTING
-        friend class TestHelper;
+    #ifdef unit_test_vector_hpp
+        friend class UNIT_TEST_VECTOR;
     #endif  
 private:
     T* data;
@@ -35,6 +35,7 @@ public:
     int size() const;
     void clear();
     const T& get(int index) const;
+    T& get(int index); 
     void set(int index, T e);
     int indexOf(T item) const;
     bool contains(T item) const;
@@ -75,8 +76,8 @@ public:
 // =====================================
 template <class T>
 class SinglyLinkedList {
-    #ifdef TESTING
-        friend class TestHelper;
+    #ifdef unit_test_vector_hpp
+        friend class UNIT_TEST_VECTOR;
     #endif  
 private:
     class Node {
@@ -106,7 +107,8 @@ public:
     bool empty() const;
     int size() const;
     void clear();
-    const T& get(int index) const ; 
+    const T& get(int index) const;
+    T& get(int index); 
     int indexOf(T item) const;
     bool contains(T item) const;
     string toString(string (*item2str)(T&) = 0) const;

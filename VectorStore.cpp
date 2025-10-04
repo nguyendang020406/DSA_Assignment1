@@ -48,9 +48,8 @@ void ArrayList<T>::ensureCapacity(int cap) {
 
     // Tăng capacity lên ít nhất cap (theo hệ số 1.5)
     int newCapacity = this->capacity;
-    while (newCapacity < cap) {
-        newCapacity = (int)(newCapacity * 1.5);
-    }
+    newCapacity = (int)(newCapacity * 1.5);
+
 
     // Cấp phát mảng mới
     T* newData = new T[newCapacity];
@@ -124,12 +123,21 @@ void ArrayList<T>::clear() {
     data = new T[capacity];     
 }
 template <class T>
+T& ArrayList<T>::get(int index) {
+    if (index < 0 || index >= count) {
+        throw std::out_of_range("Index is invalid!");
+    }
+    return data[index];
+}
+
+template <class T>
 const T& ArrayList<T>::get(int index) const {
     if (index < 0 || index >= count) {
         throw std::out_of_range("Index is invalid!");
     }
     return data[index];
 }
+
 template <class T>
 void ArrayList<T>::set(int index, T e) {
     if (index < 0 || index >= count) {
@@ -320,32 +328,20 @@ T SinglyLinkedList<T>::removeAt(int index) {
     count--;
     return val;
 }
+
 template <class T>
 bool SinglyLinkedList<T>::removeItem(T item) {
     if (!head) return false;
 
-   
-    if (head->data == item) {
-        Node* tmp = head;
-        head = head->next;
-        if (tmp == tail) tail = nullptr;
-        delete tmp;
-        count--;
-        return true;
-    }
-
-    Node* prev = head;
-    while (prev->next && !(prev->next->data == item)) {  
-        prev = prev->next;
-    }
-
-    if (prev->next) {
-        Node* tmp = prev->next;
-        prev->next = tmp->next;
-        if (tmp == tail) tail = prev;
-        delete tmp;
-        count--;
-        return true;
+    Node* cur = head;
+    int index = 0;
+    while (cur) {
+        if (cur->data == item) {
+            removeAt(index);   // tận dụng lại removeAt
+            return true;
+        }
+        cur = cur->next;
+        index++;
     }
     return false;
 }
@@ -372,14 +368,25 @@ void SinglyLinkedList<T>::clear() {
 }
 
 template <class T>
-const  T& SinglyLinkedList<T>::get(int index) const {
+T& SinglyLinkedList<T>::get(int index) {
     if (index < 0 || index >= count) {
         throw std::out_of_range("Index is invalid!");
     }
     Node* cur = head;
     for (int i = 0; i < index; i++) cur = cur->next;
-    return cur->data;
+    return cur->data;   // trả về tham chiếu thường
 }
+
+template <class T>
+const T& SinglyLinkedList<T>::get(int index) const {
+    if (index < 0 || index >= count) {
+        throw std::out_of_range("Index is invalid!");
+    }
+    Node* cur = head;
+    for (int i = 0; i < index; i++) cur = cur->next;
+    return cur->data;   // trả về tham chiếu const
+}
+
 
 template <class T>
 int SinglyLinkedList<T>::indexOf(T item) const {
@@ -520,14 +527,12 @@ SinglyLinkedList<float>* VectorStore::preprocessing(string rawText) {
 void VectorStore::addText(string rawText) {
     SinglyLinkedList<float>* vec = preprocessing(rawText);
 
-    // Tìm id lớn nhất hiện có
     int maxId = 0;
     for (int i = 0; i < count; i++) {
         int curId = records.get(i)->id;
         if (curId > maxId) maxId = curId;
     }
 
-    // id mới = id lớn nhất + 1
     int newId = maxId + 1;
 
     VectorRecord* rec = new VectorRecord(newId, rawText, vec);
@@ -603,7 +608,6 @@ void VectorStore::forEach(void (*action)(SinglyLinkedList<float>&, int, string&)
 }
 // đã check
 
-// Phần hiện thức phương thức tính khoảng cách.
 double VectorStore::cosineSimilarity(const SinglyLinkedList<float>& v1,
                                      const SinglyLinkedList<float>& v2) const {
     auto it1 = v1.begin();
@@ -617,9 +621,23 @@ double VectorStore::cosineSimilarity(const SinglyLinkedList<float>& v1,
         norm1 += a * a;
         norm2 += b * b;
     }
+
     if (norm1 == 0 || norm2 == 0) return 0.0;
-    return dot / (sqrt(norm1) * sqrt(norm2));
+
+    double val = dot / (sqrt(norm1) * sqrt(norm2));
+
+
+    // xử lý sai số
+    if (val > 1.0) val = 1.0;
+    else if (val < -1.0) val = -1.0;
+
+    const double EPS = 1e-9;
+    if (fabs(val - 1.0) < EPS) val = 1.0;
+    else if (fabs(val + 1.0) < EPS) val = -1.0;
+
+    return val;
 }
+
 
 
 double VectorStore::l1Distance(const SinglyLinkedList<float>& v1,
